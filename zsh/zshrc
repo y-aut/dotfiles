@@ -1,0 +1,29 @@
+#!/usr/bin/env zsh
+# ============================================================
+#  共有 zsh 設定
+#
+#  ~/.zshrc の先頭から source される（install.sh が追記する）。
+#  ここに書いてよいのは「どのマシンでも同じ」設定だけ。
+#  マシン固有の設定・秘密情報・インストーラの自動追記は
+#  ~/.zshrc 側（Git 管理外）に置く。
+# ============================================================
+
+# $DOTFILES は ~/.zshrc で定義されるが、単体で source された場合も
+# 動くよう自分の位置から導出しておく（%x = 実行中のファイル）。
+: ${DOTFILES:="${${(%):-%x}:A:h:h}"}
+
+# ---- 補完 ----
+autoload -Uz compinit && compinit
+# 小文字入力で大文字のディレクトリ・ファイルも補完する
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
+
+# ---- PATH ----
+# 重複を自動排除する。この後に ~/.zshrc 側で追加される PATH にも効く。
+typeset -U path PATH
+
+# ---- プロンプト / エイリアス ----
+source "$DOTFILES/zsh/prompt.zsh"
+source "$DOTFILES/zsh/aliases.zsh"
+
+# メインスレッドのスタック上限を引き上げる（macOS では 8MB → 63MB）
+ulimit -s unlimited

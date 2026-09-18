@@ -1,0 +1,46 @@
+# ============================================================
+#  共有 git 設定
+#
+#  ~/.gitconfig から include される（install.sh が追記する）。
+#  user.name / user.email などマシン固有の値は ~/.gitconfig 側に置く。
+# ============================================================
+
+[alias]
+	# ファイル名に部分一致する追跡ファイルを列挙する
+	#   git grep-file conf   →  src/app.conf
+	grep-file = "!f() { cd \"${GIT_PREFIX:-.}\" && git grep --name-only . -- \"*$1*\"; }; f"
+
+	# 追跡ファイル内の文字列を一括置換する
+	#   git replace-all old new
+	# 注意: パターンは sed にそのまま渡されるため / や . を含む文字列では誤動作する
+	replace-all = "!f() { cd \"${GIT_PREFIX:-.}\" && git grep -l \"$1\" | xargs sed -i '' -e \"s/$1/$2/g\"; }; f"
+
+	# upstream が削除されたローカルブランチを掃除する。
+	# push 済みブランチのリモートが消えた状態、つまり PR がマージされた後を拾う。
+	# squash merge も検出できる（git branch --merged では拾えない）。
+	# 既定は一覧表示のみ。--force を付けたときだけ削除する。
+	#   git sweep
+	#   git sweep --force
+	sweep = "!f() { git fetch --prune --quiet || exit 1; c=$(git symbolic-ref --short -q HEAD); b=$(git for-each-ref --format='%(refname:short) %(upstream:track)' refs/heads/ | awk -v c=\"$c\" '$2==\"[gone]\" && $1!=c {print $1}'); if [ -z \"$b\" ]; then echo 'sweep: upstream が消えたブランチはありません'; exit 0; fi; if [ \"$1\" = --force ] || [ \"$1\" = -f ]; then echo \"$b\" | xargs git branch -D; else echo 'upstream が消えたブランチ (削除するには --force):'; echo \"$b\" | sed 's/^/  /'; fi; }; f"
+
+	# 指定ブランチを origin から更新し、現在のブランチをその上に取り込む。
+	# 対象ブランチは checkout せずに更新する。取り込み方の既定は rebase。
+	#   git sync release            →  fetch してから rebase
+	#   git sync --merge release    →  fetch してから merge
+	#   git sync                    →  sync.branch の値を対象にする
+	# 対象ブランチの既定値はリポジトリごとに設定する:
+	#   git config sync.branch release
+	sync = "!f() { m=rebase; case \"$1\" in --rebase) shift ;; --merge) m=merge; shift ;; esac; b=\"${1:-$(git config sync.branch)}\"; if [ -z \"$b\" ] || [ $# -gt 1 ]; then echo 'usage: git sync [--rebase|--merge] [<branch>]   (default: git config sync.branch)' >&2; exit 1; fi; git fetch origin \"$b:$b\" && git \"$m\" \"$b\"; }; f"
+
+[branch]
+	# git branch を最近コミットした順に並べる
+	sort = -committerdate
+
+[fetch]
+	# fetch のたびに、削除されたリモートのブランチを追跡対象から外す
+	prune = true
+
+[push]
+	# upstream が無いブランチの push で --set-upstream を促されないようにする。
+	# 同名のブランチを既定リモートに作り、upstream として設定する。
+	autoSetupRemote = true
