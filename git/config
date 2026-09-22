@@ -44,3 +44,8 @@
 	# upstream が無いブランチの push で --set-upstream を促されないようにする。
 	# 同名のブランチを既定リモートに作り、upstream として設定する。
 	autoSetupRemote = true
+
+[rebase]
+	# fixup! / squash! で始まるコミットを、対象コミットの直後に並べ替えて
+	# squash 指定を付ける。git commit --fixup <commit> と対で使う。
+	autosquash = true
