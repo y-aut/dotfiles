@@ -40,6 +40,10 @@
 	# fetch のたびに、削除されたリモートのブランチを追跡対象から外す
 	prune = true
 
+[grep]
+	# git grep の検索結果に行番号を表示する
+	lineNumber = true
+
 [push]
 	# upstream が無いブランチの push で --set-upstream を促されないようにする。
 	# 同名のブランチを既定リモートに作り、upstream として設定する。
